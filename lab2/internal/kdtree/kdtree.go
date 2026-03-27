@@ -1,13 +1,3 @@
-// Package kdtree реализует 2D k-d дерево для хранения и поиска географических точек.
-//
-// KD-дерево — это бинарное дерево поиска, в котором на каждом уровне
-// пространство разбивается по одной из координат: на чётных уровнях
-// по широте (lat), на нечётных — по долготе (lng).
-//
-// Сложность:
-//   - Insert: O(log N) среднее, O(N) худшее (несбалансированное дерево)
-//   - BuildBalanced: O(N log N) — сортировка + медианное разбиение
-//   - FindNearby: O(sqrt(N)) среднее, O(N) худшее
 package kdtree
 
 import (
@@ -77,8 +67,6 @@ func (t *KDTree) FindKNearest(lat, lng float64, k int) []geoindex.Result {
 // Count возвращает число точек в дереве.
 func (t *KDTree) Count() int { return t.count }
 
-// ── Внутренние функции ────────────────────────────────────────────────────────
-
 func insertNode(n *node, p geoindex.Point, depth int) *node {
 	if n == nil {
 		return &node{point: p}
@@ -125,15 +113,10 @@ func searchRange(n *node, lat, lng, radiusKm float64, depth int, out *[]geoindex
 		*out = append(*out, geoindex.Result{Point: n.point, Distance: d})
 	}
 
-	// Решаем, в какой из поддеревьев нужно спуститься.
-	// Используем ортогональное расстояние до разделяющей плоскости.
 	var planeDist float64
 	if axis(depth) == 0 {
-		// Разделение по широте: плоскость — горизонтальная линия.
-		// Расстояние по меридиану ≈ |Δlat| * (π/180) * R
 		planeDist = absDegToKm(lat - n.point.Lat)
 	} else {
-		// Разделение по долготе.
 		planeDist = absDegToKmLng(lng-n.point.Lng, lat)
 	}
 
@@ -149,8 +132,6 @@ func searchRange(n *node, lat, lng, radiusKm float64, depth int, out *[]geoindex
 		searchRange(far, lat, lng, radiusKm, depth+1, out)
 	}
 }
-
-// ── KNN via max-heap ──────────────────────────────────────────────────────────
 
 type maxHeap struct {
 	items []geoindex.Result
@@ -233,11 +214,8 @@ func heapifyDown(items []geoindex.Result, i int) {
 	}
 }
 
-// ── Утилиты ───────────────────────────────────────────────────────────────────
-
 func axis(depth int) int { return depth % 2 }
 
-// absDegToKm: приближённый перевод разности широт в км.
 func absDegToKm(dLat float64) float64 {
 	if dLat < 0 {
 		dLat = -dLat
@@ -245,7 +223,6 @@ func absDegToKm(dLat float64) float64 {
 	return dLat * 111.32
 }
 
-// absDegToKmLng: перевод разности долгот с учётом широты.
 func absDegToKmLng(dLng, lat float64) float64 {
 	if dLng < 0 {
 		dLng = -dLng
@@ -256,9 +233,6 @@ func absDegToKmLng(dLng, lat float64) float64 {
 }
 
 func cosApprox(x float64) float64 {
-	// Используем стандартный math.Cos через прямой вызов, без import (чистый Go).
-	// Для избегания цикличности импортов вычислим через ряд Тейлора.
-	// На практике достаточно первых 6 членов для |x| < π/2.
 	x2 := x * x
 	return 1 - x2/2 + x2*x2/24 - x2*x2*x2/720
 }

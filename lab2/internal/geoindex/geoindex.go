@@ -1,15 +1,3 @@
-// Package geoindex реализует геопространственный индекс на основе геохэша.
-//
-// Алгоритм:
-//  1. При вставке объекта его координаты кодируются в геохэш заданной точности.
-//  2. Объект помещается в bucket[geohash].
-//  3. При поиске вычисляется геохэш запросной точки, затем берутся сама ячейка
-//     и её 8 соседей (3×3 сетка). Из всех найденных кандидатов оставляются
-//     только те, что попадают в радиус запроса по формуле Хаверсина.
-//
-// Сложность:
-//   - Insert: O(1) (hash + map lookup)
-//   - FindNearby: O(k), где k — среднее число точек в 9 ячейках
 package geoindex
 
 import (
@@ -51,12 +39,7 @@ type Index struct {
 	count     int
 }
 
-// New создаёт новый индекс.
-//
-// precision задаёт длину геохэша (1–12). Рекомендуемые значения:
-//   - 4 (~39 km×20 km ячейки): для радиусов 50–200 km
-//   - 5 (~4.9 km×4.9 km):      для радиусов 5–50 km
-//   - 6 (~1.2 km×0.6 km):      для радиусов 1–5 km
+// New создаёт новый индекс с заданной точностью геохэша (1–12).
 func New(precision int) *Index {
 	if precision < 1 {
 		precision = 1
@@ -77,16 +60,7 @@ func (idx *Index) Insert(p Point) {
 	idx.count++
 }
 
-// FindNearby возвращает все точки в радиусе radiusKm вокруг (lat, lng).
-// Результаты отсортированы по расстоянию (ближайшие первые).
-//
-// Алгоритм выборки ячеек:
-//  1. Строим охватывающий прямоугольник круга (bounding box).
-//  2. Сканируем прямоугольник с шагом ≈ 0.5 высоты/ширины ячейки,
-//     кодируя каждую точку в геохэш → получаем множество уникальных ячеек.
-//  3. Для каждой кандидатной ячейки берём её точки и фильтруем по Хаверсину.
-//
-// Сложность: O(k * m) где k — число ячеек в bounding box, m — среднее заполнение ячейки.
+// FindNearby возвращает все точки в радиусе radiusKm, отсортированные по расстоянию.
 func (idx *Index) FindNearby(lat, lng, radiusKm float64) []Result {
 	cells := idx.candidateCells(lat, lng, radiusKm)
 
@@ -106,15 +80,9 @@ func (idx *Index) FindNearby(lat, lng, radiusKm float64) []Result {
 	return results
 }
 
-// candidateCells возвращает все геохэш-ячейки, перекрывающиеся с кругом (lat, lng, radiusKm).
-//
-// Алгоритм: BFS-расширение из центральной ячейки через соседей.
-// Останавливаемся, когда центр очередной ячейки дальше, чем radius + диагональ ячейки.
-// Сложность: O(k), где k — число ячеек, покрывающих круг.
+// candidateCells возвращает геохэш-ячейки через BFS, перекрывающиеся с кругом радиуса radiusKm.
 func (idx *Index) candidateCells(lat, lng, radiusKm float64) []string {
-	// Размер ячейки для оценки порога включения.
 	_, _, latErr, lngErr, _ := geo.Decode(geo.Encode(lat, lng, idx.precision))
-	// Диагональ ячейки в км (с запасом).
 	cellDiag := geo.DistanceKm(
 		lat-latErr, lng-lngErr,
 		lat+latErr, lng+lngErr,
@@ -132,7 +100,6 @@ func (idx *Index) candidateCells(lat, lng, radiusKm float64) []string {
 		cur := queue[0]
 		queue = queue[1:]
 
-		// Проверяем, что центр ячейки в пределах cutoff.
 		cLat, cLng, _, _, _ := geo.Decode(cur)
 		if geo.DistanceKm(lat, lng, cLat, cLng) > cutoff {
 			continue
@@ -150,16 +117,11 @@ func (idx *Index) candidateCells(lat, lng, radiusKm float64) []string {
 	return result
 }
 
-// FindKNearest возвращает k ближайших точек. Если точек в индексе меньше k,
-// возвращает все доступные. Использует адаптивное расширение радиуса поиска.
+// FindKNearest возвращает k ближайших точек через BFS-расширение по ячейкам.
 func (idx *Index) FindKNearest(lat, lng float64, k int) []Result {
 	if k <= 0 || idx.count == 0 {
 		return nil
 	}
-
-	// Ячейки индекса покрывают фиксированный радиус; мы начинаем с одной ячейки
-	// и постепенно увеличиваем охват, пока не наберём k кандидатов или не
-	// обойдём весь индекс.
 	h := geo.Encode(lat, lng, idx.precision)
 	visited := make(map[string]struct{})
 	frontier := []string{h}

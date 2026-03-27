@@ -19,10 +19,7 @@ func init() {
 	}
 }
 
-// Encode кодирует координаты (lat, lng) в строку геохэша длиной precision (1–12).
-//
-// Алгоритм: попеременно делим диапазоны долготы и широты пополам;
-// берём 1, если точка в верхней половине, 0 — в нижней. Группируем по 5 бит → base32.
+// Encode кодирует координаты в строку геохэша длиной precision.
 func Encode(lat, lng float64, precision int) string {
 	if precision < 1 {
 		precision = 1
@@ -120,8 +117,7 @@ func Decode(hash string) (lat, lng, latErr, lngErr float64, err error) {
 	return
 }
 
-// Neighbors возвращает до 8 соседних хэшей (N, NE, E, SE, S, SW, W, NW).
-// Ячейки на полюсах или на линии перемены дат корректно усекаются.
+// Neighbors возвращает до 8 соседних геохэшей.
 func Neighbors(hash string) []string {
 	lat, lng, latErr, lngErr, err := Decode(hash)
 	if err != nil {
