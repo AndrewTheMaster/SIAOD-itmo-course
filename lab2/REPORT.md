@@ -272,8 +272,20 @@ $$\text{CI}_{95} = 1.96 \cdot \frac{s}{\sqrt{n}}$$
 ## 4. Профилирование
 
 Профили сняты командой `go test -bench -cpuprofile/-memprofile` для двух ключевых сценариев: `FindNearby` и `Insert`.
+Flamegraph-ы сгенерированы через `go tool pprof -http` и сохранены как интерактивные HTML-файлы.
 
-### 4.1 CPU - FindNearby
+| Профиль | Flamegraph | Call graph |
+|:--------|:-----------|:-----------|
+| CPU — FindNearby | [flamegraph_cpu_findnearby.html](metrics/plots/flamegraph_cpu_findnearby.html) | ![](metrics/plots/pprof_cpu_findnearby.png) |
+| CPU — Insert | [flamegraph_cpu_insert.html](metrics/plots/flamegraph_cpu_insert.html) | ![](metrics/plots/pprof_cpu_insert.png) |
+| Память — FindNearby | [flamegraph_mem_findnearby.html](metrics/plots/flamegraph_mem_findnearby.html) | ![](metrics/plots/pprof_mem_findnearby.png) |
+| Память — Insert | [flamegraph_mem_insert.html](metrics/plots/flamegraph_mem_insert.html) | — |
+
+### 4.1 CPU — FindNearby
+
+**Рисунок 4.1 — Flamegraph CPU (FindNearby)**
+
+[Открыть интерактивный flamegraph](metrics/plots/flamegraph_cpu_findnearby.html)
 
 | Функция | flat | flat% | Вывод |
 |:--------|-----:|------:|:------|
@@ -286,7 +298,11 @@ $$\text{CI}_{95} = 1.96 \cdot \frac{s}{\sqrt{n}}$$
 
 **Вывод:** ~27% времени уходит на формулу Хаверсина (`cos`/`sin`/`asin`). Потенциальная оптимизация - кэшировать `cos(lat)` запросной точки и использовать плоскостное приближение для кандидатов в пределах ячейки, вызывая точный Хаверсин только для финального фильтра.
 
-### 4.2 CPU - Insert
+### 4.2 CPU — Insert
+
+**Рисунок 4.2 — Flamegraph CPU (Insert)**
+
+[Открыть интерактивный flamegraph](metrics/plots/flamegraph_cpu_insert.html)
 
 | Функция | flat | flat% | Вывод |
 |:--------|-----:|------:|:------|
@@ -297,7 +313,11 @@ $$\text{CI}_{95} = 1.96 \cdot \frac{s}{\sqrt{n}}$$
 
 **Вывод:** узкое место вставки у geohash - строковое хэширование (`geo.Encode`); у kd-tree - рекурсивный `insertNode`, что ожидаемо при O(log N).
 
-### 4.3 Память - FindNearby
+### 4.3 Память — FindNearby
+
+**Рисунок 4.3 — Flamegraph памяти (FindNearby)**
+
+[Открыть интерактивный flamegraph](metrics/plots/flamegraph_mem_findnearby.html)
 
 | Функция | alloc | alloc% | Вывод |
 |:--------|------:|-------:|:------|
@@ -308,7 +328,11 @@ $$\text{CI}_{95} = 1.96 \cdot \frac{s}{\sqrt{n}}$$
 
 **Вывод:** основные аллокации у kd-tree - результирующий срез, растущий через `append`. Можно устранить, передавая переиспользуемый буфер. У geohash - BFS очередь и срез соседей; использование `sync.Pool` снизит давление на GC.
 
-### 4.4 Память - Insert
+### 4.4 Память — Insert
+
+**Рисунок 4.4 — Flamegraph памяти (Insert)**
+
+[Открыть интерактивный flamegraph](metrics/plots/flamegraph_mem_insert.html)
 
 | Функция | alloc | alloc% | Вывод |
 |:--------|------:|-------:|:------|

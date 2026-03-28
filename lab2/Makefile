@@ -69,11 +69,17 @@ profile:
 		go tool pprof -png $(PROF_DIR)/cpu_insert.prof     > $(PLOT_DIR)/pprof_cpu_insert.png; \
 		go tool pprof -png $(PROF_DIR)/mem_findnearby.prof > $(PLOT_DIR)/pprof_mem_findnearby.png; \
 		go tool pprof -png $(PROF_DIR)/mem_insert.prof     > $(PLOT_DIR)/pprof_mem_insert.png; \
-		echo "pprof PNG graphs saved to $(PLOT_DIR)"; \
+		echo "pprof PNG call graphs saved to $(PLOT_DIR)"; \
 	else \
 		echo "graphviz not found — install with: sudo dnf install graphviz"; \
-		echo "text profiles saved to $(PROF_DIR)"; \
 	fi
+	@for prof in cpu_findnearby cpu_insert mem_findnearby mem_insert; do \
+		go tool pprof -http=:8082 $(PROF_DIR)/$${prof}.prof & \
+		PPID=$$!; sleep 2; \
+		curl -s "http://localhost:8082/ui/flamegraph" -o $(PLOT_DIR)/flamegraph_$${prof}.html; \
+		kill $$PPID 2>/dev/null; sleep 1; \
+		echo "flamegraph saved: $(PLOT_DIR)/flamegraph_$${prof}.html"; \
+	done
 
 clean:
 	rm -rf metrics
