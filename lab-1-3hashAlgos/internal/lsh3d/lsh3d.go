@@ -6,19 +6,17 @@ import (
 	"math/rand"
 )
 
-// Point3D представляет точку в трёхмерном евклидовом пространстве.
 type Point3D struct {
 	X, Y, Z float64
 	ID       int
 }
 
-// Candidate — точка-кандидат в ответе на запрос с расстоянием до неё.
+// Candidate — кандидат-дубль с расстоянием до запрошенной точки.
 type Candidate struct {
 	ID       int
 	Distance float64
 }
 
-// Pair — пара ближних точек, найденная при полном сканировании.
 type Pair struct {
 	ID1, ID2 int
 	Distance float64
@@ -31,8 +29,7 @@ type Config struct {
 	BandWidth float64 // w: ширина ячейки проекции (~радиус поиска)
 }
 
-// DefaultConfig возвращает параметры для точечных облаков в [0, 100)^3
-// с ближайшими дублями в радиусе ~5 единиц.
+// DefaultConfig для облаков в [0, 100)^3, дубли в радиусе ~5.
 func DefaultConfig() Config {
 	return Config{NumTables: 10, NumFuncs: 3, BandWidth: 5.0}
 }
@@ -56,7 +53,7 @@ type proj struct {
 	b          float64
 }
 
-// Index — LSH-индекс для приближённого поиска ближайших точек в R³.
+// Index — p-stable LSH индекс для R³.
 type Index struct {
 	cfg    Config
 	tables []map[int64][]Point3D
@@ -64,7 +61,7 @@ type Index struct {
 	all    []Point3D
 }
 
-// NewIndex создаёт индекс с фиксированным seed для воспроизводимости.
+// NewIndex создаёт индекс; проекторы инициализируются с seed=42.
 func NewIndex(cfg Config) (*Index, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, err
@@ -98,7 +95,6 @@ func (idx *Index) compoundKey(p Point3D, t int) int64 {
 	return key
 }
 
-// Add добавляет точку в индекс.
 func (idx *Index) Add(p Point3D) {
 	for t := range idx.tables {
 		k := idx.compoundKey(p, t)
@@ -129,8 +125,7 @@ func (idx *Index) Query(p Point3D) []Candidate {
 	return result
 }
 
-// FullScanDuplicates возвращает все пары точек в пределах maxDist,
-// найденные через LSH-бакеты.
+// FullScanDuplicates возвращает пары точек ближе maxDist через обход LSH-бакетов.
 func (idx *Index) FullScanDuplicates(maxDist float64) []Pair {
 	type pairKey struct{ a, b int }
 	seen := make(map[pairKey]struct{})
@@ -159,7 +154,6 @@ func (idx *Index) FullScanDuplicates(maxDist float64) []Pair {
 	return pairs
 }
 
-// Count возвращает число проиндексированных точек.
 func (idx *Index) Count() int { return len(idx.all) }
 
 func dist3D(a, b Point3D) float64 {

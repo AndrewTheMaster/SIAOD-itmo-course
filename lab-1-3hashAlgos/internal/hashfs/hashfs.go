@@ -9,29 +9,20 @@ import (
 	"syscall"
 )
 
-// Store описывает минимальный интерфейс файлового key-value хранилища.
+// Store — интерфейс файлового key-value хранилища.
 type Store interface {
 	Put(key, value []byte) error
 	Get(key []byte) ([]byte, error)
 	Delete(key []byte) error
-	// Reset очищает все данные, оставляя структуру файла нетронутой.
-	// Все ключи удаляются; хранилище возвращается в начальное пустое состояние.
-	Reset() error
+	Reset() error // сбрасывает все записи без пересоздания файла
 	Close() error
 }
 
 // Options задаёт параметры открытия/создания хранилища.
 type Options struct {
-	// BucketCount — количество бакетов в хэш-таблице (должно быть степенью двойки).
-	BucketCount uint64
-
-	// PageSize — логический размер страницы/выравнивания в байтах.
-	// Если 0, используется системный размер страницы.
-	PageSize uint64
-
-	// MaxValueSize — максимальный размер value в байтах.
-	// Если 0, используется значение по умолчанию.
-	MaxValueSize uint32
+	BucketCount  uint64 // должно быть степенью двойки
+	PageSize     uint64 // 0 → системный размер страницы
+	MaxValueSize uint32 // 0 → 1 MiB
 }
 
 const (
@@ -42,10 +33,7 @@ const (
 	flagTombstone = 1
 )
 
-var (
-	// ErrNotFound возвращается, когда ключ не найден или помечен tombstone.
-	ErrNotFound = errors.New("hashfs: key not found")
-)
+var ErrNotFound = errors.New("hashfs: key not found")
 
 // on-disk header layout (little-endian):
 //   0:8   magic
@@ -153,7 +141,6 @@ func (s *store) initNewFile() error {
 }
 
 func (s *store) loadExistingFile() error {
-	// Прочитать header и bucketCount из файла, затем mmap.
 	hdr := make([]byte, headerSize)
 	if _, err := s.f.ReadAt(hdr, 0); err != nil {
 		return err
@@ -294,8 +281,7 @@ func (s *store) appendRecord(key, value []byte, hash uint64, flags uint8, next u
 	keyLen := uint32(len(key))
 	valLen := uint32(len(value))
 
-	// 4 + 4 + 8 + 1 + keyLen + valLen + 8
-	recSize := 4 + 4 + 8 + 1 + int(keyLen) + int(valLen) + 8
+	recSize := 4 + 4 + 8 + 1 + int(keyLen) + int(valLen) + 8 // keyLen+valLen+hash+flags+data+next
 	buf := make([]byte, recSize)
 
 	binary.LittleEndian.PutUint32(buf[0:4], keyLen)
@@ -365,9 +351,7 @@ func alignUp(x, align uint64) uint64 {
 	return x + align - r
 }
 
-// Reset обнуляет все ссылки на бакеты и сбрасывает указатель записи на начало
-// области данных. Эффективно стирает все хранимые пары ключ–значение без
-// пересоздания файла, что позволяет повторно использовать хранилище в бенчмарках.
+// Reset обнуляет бакеты и сбрасывает tail — хранилище логически пусто.
 func (s *store) Reset() error {
 	for i := uint64(0); i < s.bucketCount; i++ {
 		s.setBucketHead(i, 0)

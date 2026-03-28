@@ -5,9 +5,7 @@ import (
 	"errors"
 )
 
-// Table представляет статическую perfect-hash таблицу над фиксированным набором ключей.
-// Реализация здесь использует простую карту string->index как полный индекс
-// по фиксированному набору ключей.
+// Table — статический индекс string→int для фиксированного набора ключей.
 type Table struct {
 	index map[string]int
 }
@@ -15,8 +13,7 @@ type Table struct {
 // Builder строит таблицу по набору ключей.
 type Builder struct{}
 
-// Build создаёт таблицу, отображающую каждый ключ в его индекс во входном слайсе.
-// Ключи должны быть уникальными.
+// Build строит индекс key→порядковый номер. Ключи должны быть уникальными.
 func (b *Builder) Build(keys [][]byte) (*Table, error) {
 	idx := make(map[string]int, len(keys))
 	for i, k := range keys {
@@ -29,7 +26,7 @@ func (b *Builder) Build(keys [][]byte) (*Table, error) {
 	return &Table{index: idx}, nil
 }
 
-// Lookup возвращает индекс ключа в исходном массиве и флаг успешного поиска.
+// Lookup возвращает индекс ключа и признак его наличия.
 func (t *Table) Lookup(key []byte) (int, bool) {
 	if t == nil || t.index == nil {
 		return 0, false
@@ -38,15 +35,12 @@ func (t *Table) Lookup(key []byte) (int, bool) {
 	return i, ok
 }
 
-// Serialize кодирует таблицу в байтовый слайс.
-// Формат: [n uint32][повторы: keyLen uint32, keyBytes, index uint32].
+// Serialize кодирует таблицу: [n uint32][keyLen uint32, keyBytes, index uint32...].
 func (t *Table) Serialize() []byte {
 	if t == nil || len(t.index) == 0 {
 		return nil
 	}
 	n := len(t.index)
-
-	// Приблизительная оценка размера: по 32 байта на запись.
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf[0:4], uint32(n))
 
@@ -61,7 +55,7 @@ func (t *Table) Serialize() []byte {
 	return buf
 }
 
-// Deserialize восстанавливает таблицу из байтового слайса, созданного Serialize.
+// Deserialize восстанавливает таблицу из байт Serialize.
 func Deserialize(data []byte) (*Table, error) {
 	if len(data) == 0 {
 		return &Table{index: make(map[string]int)}, nil
