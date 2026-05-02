@@ -1,0 +1,22 @@
+goos: linux
+goarch: amd64
+pkg: siaod-hw4-concmap/internal/concmap
+cpu: AMD Eng Sample: 100-000000829-50_Y             
+BenchmarkParallelGetHit/size_4096/concmap-16 	100000000	        11.23 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelGetHit/size_4096/plain-16   	16040287	        43.78 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelGetHit/size_65536/concmap-16         	38427255	        25.88 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelGetHit/size_65536/plain-16           	17007375	        44.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelPutOverwrite/size_4096/concmap-16    	50211273	        14.43 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelPutOverwrite/size_4096/plain-16      	 4772830	       148.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelPutOverwrite/size_65536/concmap-16   	28804916	        30.99 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelPutOverwrite/size_65536/plain-16     	 5408331	       147.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelMixedRW/size_4096/concmap-16         	31528929	        24.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelMixedRW/size_4096/plain-16           	12053758	        58.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelMixedRW/size_65536/concmap-16        	21634238	        38.24 ns/op	       0 B/op	       0 allocs/op
+BenchmarkParallelMixedRW/size_65536/plain-16          	10750132	        65.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRangeFullTable/size_4096/concmap-16          	   22215	     32617 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRangeFullTable/size_4096/plain-16            	   20378	     35282 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRangeFullTable/size_65536/concmap-16         	     868	    734148 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRangeFullTable/size_65536/plain-16           	     882	    779573 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	siaod-hw4-concmap/internal/concmap	15.195s

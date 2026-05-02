@@ -1,0 +1,11 @@
+{
+  "vectors_n": 100000,
+  "dim": 128,
+  "nq": 2000,
+  "k": 100,
+  "seed": 42,
+  "data_path": null,
+  "synthetic_n": 100000,
+  "quick": true,
+  "gt_sec": 1.2617
+}

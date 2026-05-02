@@ -1,0 +1,55 @@
+{
+  "per_family": {
+    "HNSW": {
+      "best_by_recall_then_size": {
+        "family": "HNSW",
+        "params": "{\"M\": 24, \"efConstruction\": 120, \"efSearch\": 128}",
+        "build_sec": "11.370128",
+        "index_bytes": 72024366,
+        "search_sec": "0.192394",
+        "recall_at_k": "0.678435"
+      },
+      "configs_tested": 18
+    },
+    "IVF_PQ": {
+      "best_by_recall_then_size": {
+        "family": "IVF_PQ",
+        "params": "{\"nlist\": 128, \"m\": 32, \"nprobe\": 64}",
+        "build_sec": "1.916124",
+        "index_bytes": 4197812,
+        "search_sec": "0.773220",
+        "recall_at_k": "0.481330"
+      },
+      "configs_tested": 16
+    },
+    "LSH": {
+      "best_by_recall_then_size": {
+        "family": "LSH",
+        "params": "{\"nbits\": 512}",
+        "build_sec": "0.474964",
+        "index_bytes": 6662237,
+        "search_sec": "0.234722",
+        "recall_at_k": "0.215730"
+      },
+      "configs_tested": 4
+    }
+  },
+  "global_tradeoff_pick": {
+    "family": "IVF_PQ",
+    "params": "{\"nlist\": 128, \"m\": 32, \"nprobe\": 16}",
+    "build_sec": "1.916124",
+    "index_bytes": 4197812,
+    "search_sec": "0.202415",
+    "recall_at_k": "0.287300"
+  },
+  "global_tradeoff_score_weights": {
+    "recall": 0.4,
+    "inverse_size": 0.2,
+    "inverse_build_time": 0.2,
+    "inverse_search_time": 0.2
+  },
+  "winner_recall_only": [
+    "HNSW",
+    0.678435
+  ]
+}

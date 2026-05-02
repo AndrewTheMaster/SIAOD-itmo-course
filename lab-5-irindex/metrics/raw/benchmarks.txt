@@ -1,0 +1,12 @@
+goos: linux
+goarch: amd64
+pkg: siaod-hw5-irindex/internal/ir
+cpu: AMD Eng Sample: 100-000000829-50_Y             
+BenchmarkBuildIndex/corp400-16         	     319	   1861359 ns/op	 1364343 B/op	   21162 allocs/op
+BenchmarkBuildIndex/corp2000-16        	      51	  10471645 ns/op	 7238082 B/op	  105703 allocs/op
+BenchmarkQueryEvalMixed/idx_400-16     	    2176	    268193 ns/op	  134208 B/op	     270 allocs/op
+BenchmarkQueryEvalMixed/scan_400-16    	    2648	    206555 ns/op	  105688 B/op	     237 allocs/op
+BenchmarkQueryEvalMixed/idx_2000-16    	     387	   1546409 ns/op	  685218 B/op	    1027 allocs/op
+BenchmarkQueryEvalMixed/scan_2000-16   	     508	   1193911 ns/op	  511763 B/op	    1119 allocs/op
+PASS
+ok  	siaod-hw5-irindex/internal/ir	4.085s

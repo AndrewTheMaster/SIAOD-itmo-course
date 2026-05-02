@@ -1,0 +1,17 @@
+bench,impl,size,iters,ns_per_op,bytes_per_op
+BenchmarkParallelGetHit,concmap,4096,100000000,11.23,0
+BenchmarkParallelGetHit,plain,4096,16040287,43.78,0
+BenchmarkParallelGetHit,concmap,65536,38427255,25.88,0
+BenchmarkParallelGetHit,plain,65536,17007375,44.68,0
+BenchmarkParallelPutOverwrite,concmap,4096,50211273,14.43,0
+BenchmarkParallelPutOverwrite,plain,4096,4772830,148.1,0
+BenchmarkParallelPutOverwrite,concmap,65536,28804916,30.99,0
+BenchmarkParallelPutOverwrite,plain,65536,5408331,147.6,0
+BenchmarkParallelMixedRW,concmap,4096,31528929,24.30,0
+BenchmarkParallelMixedRW,plain,4096,12053758,58.97,0
+BenchmarkParallelMixedRW,concmap,65536,21634238,38.24,0
+BenchmarkParallelMixedRW,plain,65536,10750132,65.30,0
+BenchmarkRangeFullTable,concmap,4096,22215,32617,0
+BenchmarkRangeFullTable,plain,4096,20378,35282,0
+BenchmarkRangeFullTable,concmap,65536,868,734148,0
+BenchmarkRangeFullTable,plain,65536,882,779573,0

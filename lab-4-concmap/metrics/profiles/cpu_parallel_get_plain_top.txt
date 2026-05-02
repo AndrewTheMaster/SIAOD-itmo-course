@@ -1,0 +1,18 @@
+File: concmap.test
+Build ID: 653ad8f9e41a98cad0855879f53e4c9a3c594738
+Type: cpu
+Time: 2026-05-02 15:00:10 MSK
+Duration: 1.34s, Total samples = 17.09s (1271.25%)
+Showing nodes accounting for 16.80s, 98.30% of 17.09s total
+Dropped 48 nodes (cum <= 0.09s)
+      flat  flat%   sum%        cum   cum%
+    13.08s 76.54% 76.54%     13.10s 76.65%  sync/atomic.(*Int32).Add (inline)
+     1.89s 11.06% 87.60%     16.34s 95.61%  siaod-hw4-concmap/internal/concmap.(*Plain[go.shape.string,go.shape.int]).Get
+     0.63s  3.69% 91.28%     17.02s 99.59%  siaod-hw4-concmap/internal/concmap.BenchmarkParallelGetHit.func1.2.1
+     0.48s  2.81% 94.09%      0.48s  2.81%  internal/runtime/maps.ctrlGroup.matchH2 (inline)
+     0.40s  2.34% 96.43%      1.31s  7.67%  runtime.mapaccess2_faststr
+     0.16s  0.94% 97.37%      0.16s  0.94%  aeshashbody
+     0.12s   0.7% 98.07%      0.12s   0.7%  internal/runtime/maps.(*Map).directoryAt (inline)
+     0.04s  0.23% 98.30%      6.36s 37.21%  sync.(*RWMutex).RUnlock
+         0     0% 98.30%      6.78s 39.67%  sync.(*RWMutex).RLock (inline)
+         0     0% 98.30%     17.02s 99.59%  testing.(*B).RunParallel.func1

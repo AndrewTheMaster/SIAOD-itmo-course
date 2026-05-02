@@ -1,0 +1,7 @@
+bench,mode,corpus,iters,ns_per_op,bytes_per_op
+BenchmarkBuildIndex,build,400,319,1861359,1364343
+BenchmarkBuildIndex,build,2000,51,10471645,7238082
+BenchmarkQueryEvalMixed,idx,400,2176,268193,134208
+BenchmarkQueryEvalMixed,scan,400,2648,206555,105688
+BenchmarkQueryEvalMixed,idx,2000,387,1546409,685218
+BenchmarkQueryEvalMixed,scan,2000,508,1193911,511763

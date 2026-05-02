@@ -1,0 +1,72 @@
+BENCH_CORPUS ?= 400,2000
+BENCH_TIME   ?= 500ms
+BENCH_FILTER ?= ^Benchmark
+METRICS_OUT  ?= metrics
+RAW_DIR      := $(METRICS_OUT)/raw
+PLOT_DIR     := $(METRICS_OUT)/plots
+PROF_DIR     := $(METRICS_OUT)/profiles
+
+.PHONY: test bench collect metrics plot profile clean
+
+test:
+	go test ./...
+
+bench:
+	BENCH_CORPUS='$(BENCH_CORPUS)' go test ./internal/ir -run='^$$' -bench '$(BENCH_FILTER)' -benchmem -benchtime='$(BENCH_TIME)'
+
+collect:
+	mkdir -p $(RAW_DIR) $(PLOT_DIR)
+	BENCH_CORPUS='$(BENCH_CORPUS)' go test ./internal/ir -run='^$$' -bench '$(BENCH_FILTER)' -benchmem -benchtime='$(BENCH_TIME)' \
+		> $(RAW_DIR)/benchmarks.txt
+	awk 'BEGIN { OFS=","; print "bench,mode,corpus,iters,ns_per_op,bytes_per_op" } \
+	/^Benchmark/ { \
+	  fname=$$1; \
+	  sub(/-[0-9]+$$/, "", fname); \
+	  n=split(fname, a, "/"); \
+	  if (n < 2) next; \
+	  bench=a[1]; tail=a[2]; \
+	  mode=""; corpus=0; \
+	  if (bench == "BenchmarkBuildIndex") { \
+	    sub(/^corp/, "", tail); corpus=tail+0; mode="build"; \
+	  } else if (bench == "BenchmarkQueryEvalMixed") { \
+	    split(tail, u, "_"); mode=u[1]; corpus=u[2]+0; \
+	  } else next; \
+	  iters=$$2; ns=0; bpb=0; \
+	  for (i=2; i<=NF; i++) { \
+	    if ($$i == "ns/op") ns=$$(i-1); \
+	    if ($$i == "B/op") bpb=$$(i-1); \
+	  } \
+	  print bench,mode,corpus,iters,ns,bpb; \
+	}' $(RAW_DIR)/benchmarks.txt > $(RAW_DIR)/benchmarks.csv
+	rm -f $(RAW_DIR)/series_*.tsv
+	awk -F',' \
+	  -v RAW="$(RAW_DIR)" \
+	  'BEGIN{OFS="\t"} \
+	   NR==1 || $$1=="bench" { next } \
+	   { fname = RAW "/series_" $$1 "_" $$2 ".tsv"; print $$3+0, $$5+0 >> fname }' \
+	  $(RAW_DIR)/benchmarks.csv
+	for f in $(RAW_DIR)/series_*.tsv; do \
+	  [ -f "$$f" ] && sort -n -o "$$f" "$$f" || true; \
+	done
+
+metrics: collect plot
+
+plot:
+	mkdir -p $(PLOT_DIR)
+	gnuplot -e "raw_dir='$(RAW_DIR)'; plot_dir='$(PLOT_DIR)'" plot_metrics.gnuplot
+
+profile:
+	mkdir -p $(PROF_DIR) $(PLOT_DIR)
+	BENCH_CORPUS='2000' go test ./internal/ir -run='^$$' \
+		-bench '^BenchmarkQueryEvalMixed/idx_2000$$' -benchtime='900ms' \
+		-cpuprofile=$(PROF_DIR)/cpu_query_idx.prof \
+		-memprofile=$(PROF_DIR)/mem_query_idx.prof >/dev/null
+	go tool pprof -top $(PROF_DIR)/cpu_query_idx.prof >$(PROF_DIR)/cpu_query_idx_top.txt
+	go tool pprof -top $(PROF_DIR)/mem_query_idx.prof >$(PROF_DIR)/mem_query_idx_mem_top.txt
+	@if command -v dot >/dev/null 2>&1; then \
+		go tool pprof -png $(PROF_DIR)/cpu_query_idx.prof >$(PLOT_DIR)/pprof_cpu_query_idx.png 2>/dev/null; \
+	else echo "нет graphviz (dot)"; \
+	fi
+
+clean:
+	rm -rf $(METRICS_OUT)

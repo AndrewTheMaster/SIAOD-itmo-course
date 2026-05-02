@@ -69,3 +69,7 @@ metrics/raw/
 # --- Крупные датасеты и черновики ---
 lab1/AllCombined*.txt
 results/
+
+# Lab 3: большой sift + venv локально (графики в metrics/plots/ коммитим)
+lab-3-vecSearch/data/
+lab-3-vecSearch/.venv/
